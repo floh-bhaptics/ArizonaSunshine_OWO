@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace ArizonaSunshine_bhaptics
 {
-    public class ArizonaSunshine_bhaptics : MelonMod
+    public class ArizonaSunshine_OWO : MelonMod
     {
         public static TactsuitVR tactsuitVr;
         public static bool footStepRight = true;
