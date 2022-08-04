@@ -20,7 +20,12 @@ namespace ArizonaSunshine_bhaptics
         {
             base.OnApplicationStart();
             tactsuitVr = new TactsuitVR();
-            tactsuitVr.PlaybackHaptics("HeartBeat");
+        }
+
+        public override void OnApplicationQuit()
+        {
+            base.OnApplicationQuit();
+            tactsuitVr.DisconnectOwo();
         }
 
         private static KeyValuePair<float, float> getAngleAndShift(Transform player, Vector3 hit, Quaternion playerRotation)
@@ -85,11 +90,10 @@ namespace ArizonaSunshine_bhaptics
                 var angleShift = getAngleAndShift(playerPosition, hitPosition, playerRotation);
                 if (zombie.Locomotion.IsCrawling)
                 {
-                    tactsuitVr.PlaybackHaptics("ExplosionFeet");
-                    tactsuitVr.PlayBackHit("Slash", angleShift.Key, -0.5f);
+                    tactsuitVr.PlayBackHit(angleShift.Key, -0.5f);
                     return;
                 }
-                tactsuitVr.PlayBackHit("Slash", angleShift.Key, angleShift.Value);
+                tactsuitVr.PlayBackHit(angleShift.Key, angleShift.Value);
 
             }
         }
@@ -103,7 +107,7 @@ namespace ArizonaSunshine_bhaptics
                 if (!__result) return;
                 bool twoHanded = (__instance.IsTwoHanded && __instance.IsTwoHandedOffHandAttached);
                 bool isRight = (__instance.EquipmentSlot.SlotID == E_EQUIPMENT_SLOT_ID.RIGHT_HAND);
-                tactsuitVr.Recoil("Pistol", isRight, twoHanded);
+                tactsuitVr.Recoil(isRight, twoHanded);
             }
         }
 
@@ -114,19 +118,7 @@ namespace ArizonaSunshine_bhaptics
             public static void Postfix(Player __instance)
             {
                 if (!__instance.IsLocalPlayer) return;
-                tactsuitVr.PlaybackHaptics("Healing");
-            }
-        }
-
-        [HarmonyPatch(typeof(SlidingLocomotionController), "PlayFootstepAudio", new Type[] { typeof(Vector3), typeof(bool) })]
-        public class bhaptics_PlayerFootstep
-        {
-            [HarmonyPostfix]
-            public static void Postfix()
-            {
-                if (footStepRight) tactsuitVr.PlaybackHaptics("FootStep_R");
-                else tactsuitVr.PlaybackHaptics("FootStep_L");
-                footStepRight = !footStepRight;
+                tactsuitVr.PlayHeal();
             }
         }
 
@@ -136,8 +128,7 @@ namespace ArizonaSunshine_bhaptics
             [HarmonyPostfix]
             public static void Postfix()
             {
-                tactsuitVr.PlaybackHaptics("ExplosionBelly");
-                tactsuitVr.PlaybackHaptics("ExplosionFeet");
+                tactsuitVr.PlayExplosion();
             }
         }
 
@@ -147,8 +138,7 @@ namespace ArizonaSunshine_bhaptics
             [HarmonyPostfix]
             public static void Postfix()
             {
-                tactsuitVr.PlaybackHaptics("ExplosionBelly");
-                tactsuitVr.PlaybackHaptics("ExplosionFeet");
+                tactsuitVr.PlayExplosion();
             }
         }
 
@@ -158,8 +148,7 @@ namespace ArizonaSunshine_bhaptics
             [HarmonyPostfix]
             public static void Postfix()
             {
-                tactsuitVr.PlaybackHaptics("ExplosionBelly");
-                tactsuitVr.PlaybackHaptics("ExplosionFeet");
+                tactsuitVr.PlayExplosion();
             }
         }
 

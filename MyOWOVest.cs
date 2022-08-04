@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using MelonLoader;
+using OWOHaptic;
+//using MyOWOSensations;
 
 namespace MyBhapticsTactsuit
 {
@@ -19,10 +21,20 @@ namespace MyBhapticsTactsuit
         public bool systemInitialized = false;
         // Event to start and stop the heartbeat thread
         private static ManualResetEvent HeartBeat_mrse = new ManualResetEvent(false);
-        // dictionary of all feedback patterns found in the bHaptics directory
-        public Dictionary<String, FileInfo> FeedbackMap = new Dictionary<String, FileInfo>();
 
-        private static bHaptics.RotationOption defaultRotationOption = new bHaptics.RotationOption(0.0f, 0.0f);
+        public static IOWOSensation Explosion => new OWOSensation(100, 1f, 80, 100f, 500f, 0f);
+        public static OWOSensationWithMuscles ExplosionBelly = new OWOSensationWithMuscles(Explosion, OWOMuscle.Abdominal_Left, OWOMuscle.Abdominal_Right, OWOMuscle.Lumbar_Left, OWOMuscle.Lumbar_Right);
+
+        public static IOWOSensation Healing => new OWOSensation(70, 0.5f, 65, 300f, 200f, 0f);
+        public static OWOSensationWithMuscles Healing1 = new OWOSensationWithMuscles(Healing, OWOMuscle.Abdominal_Left, OWOMuscle.Dorsal_Right);
+        public static OWOSensationWithMuscles Healing2 = new OWOSensationWithMuscles(Healing, OWOMuscle.Abdominal_Right, OWOMuscle.Dorsal_Left);
+        public static OWOSensationWithMuscles Healing3 = new OWOSensationWithMuscles(Healing, OWOMuscle.Lumbar_Right, OWOMuscle.Pectoral_Left);
+        public static OWOSensationWithMuscles Healing4 = new OWOSensationWithMuscles(Healing, OWOMuscle.Lumbar_Left, OWOMuscle.Pectoral_Right);
+        public static OWOSensationsChain HealingBody = new OWOSensationsChain(Healing1, Healing2, Healing3, Healing4);
+
+        public static IOWOSensation Reload1 => new OWOSensation(100, 0.3f, 50, 100f, 100f, 0f);
+        public static IOWOSensation Reload2 => new OWOSensation(100, 0.2f, 40, 0f, 100f, 0f);
+        public static OWOSensationsChain Reloading = new OWOSensationsChain(Reload1, Reload2);
 
         public void HeartBeatFunc()
         {
@@ -30,7 +42,7 @@ namespace MyBhapticsTactsuit
             {
                 // Check if reset event is active
                 HeartBeat_mrse.WaitOne();
-                bHaptics.SubmitRegistered("HeartBeat");
+                OWO.Send(OWOSensation.HeartBeat, OWOMuscle.Pectoral_Left);
                 Thread.Sleep(600);
             }
         }
@@ -38,14 +50,32 @@ namespace MyBhapticsTactsuit
         public TactsuitVR()
         {
             LOG("Initializing suit");
-            if (!bHaptics.WasError)
+            OWO.AutoConnect();
+            //OWO.Connect("192.168.1.248");
+            Thread.Sleep(100);
+            if (OWO.IsConnected)
             {
                 suitDisabled = false;
+                LOG("OWO suit connected.");
             }
-            RegisterAllTactFiles();
+            if (suitDisabled) LOG("Owo is not enabled?!?!"); 
+
             LOG("Starting HeartBeat thread...");
             Thread HeartBeatThread = new Thread(HeartBeatFunc);
             HeartBeatThread.Start();
+        }
+
+        ~TactsuitVR()
+        {
+            LOG("Destructor called");
+            DisconnectOwo();
+        }
+
+
+        public void DisconnectOwo()
+        {
+            LOG("Disconnecting Owo skin.");
+            OWO.Disconnect();
         }
 
         public void LOG(string logStr)
@@ -57,107 +87,54 @@ namespace MyBhapticsTactsuit
 
 
 
-        void RegisterAllTactFiles()
+        public void PlayBackHit(float xzAngle, float yShift)
         {
-            // Get location of the compiled assembly and search through "bHaptics" directory and contained patterns
-            string configPath = Directory.GetCurrentDirectory() + "\\Mods\\bHaptics";
-            DirectoryInfo d = new DirectoryInfo(configPath);
-            FileInfo[] Files = d.GetFiles("*.tact", SearchOption.AllDirectories);
-            for (int i = 0; i < Files.Length; i++)
-            {
-                string filename = Files[i].Name;
-                string fullName = Files[i].FullName;
-                string prefix = Path.GetFileNameWithoutExtension(filename);
-                // LOG("Trying to register: " + prefix + " " + fullName);
-                if (filename == "." || filename == "..")
-                    continue;
-                string tactFileStr = File.ReadAllText(fullName);
-                try
-                {
-                    bHaptics.RegisterFeedbackFromTactFile(prefix, tactFileStr);
-                    LOG("Pattern registered: " + prefix);
-                }
-                catch (Exception e) { LOG(e.ToString()); }
-
-                FeedbackMap.Add(prefix, Files[i]);
-            }
-            systemInitialized = true;
-        }
-
-        public void PlaybackHaptics(String key, float intensity = 1.0f, float duration = 1.0f)
-        {
-            //LOG("Trying to play");
-            if (FeedbackMap.ContainsKey(key))
-            {
-                //LOG("ScaleOption");
-                bHaptics.ScaleOption scaleOption = new bHaptics.ScaleOption(intensity, duration);
-                //LOG("Submit");
-                bHaptics.SubmitRegistered(key, key, scaleOption, defaultRotationOption);
-                // LOG("Playing back: " + key);
-            }
-            else
-            {
-                LOG("Feedback not registered: " + key);
-            }
-        }
-
-        public void PlayBackHit(String key, float xzAngle, float yShift)
-        {
+            OWOSensation sensation = OWOSensation.ShotEntry;
             // two parameters can be given to the pattern to move it on the vest:
             // 1. An angle in degrees [0, 360] to turn the pattern to the left
             // 2. A shift [-0.5, 0.5] in y-direction (up and down) to move it up or down
-            bHaptics.ScaleOption scaleOption = new bHaptics.ScaleOption(1f, 1f);
-            bHaptics.RotationOption rotationOption = new bHaptics.RotationOption(xzAngle, yShift);
-            bHaptics.SubmitRegistered(key, key, scaleOption, rotationOption);
+            if ((xzAngle < 90f))
+            {
+                if (yShift >= 0f) OWO.Send(sensation, OWOMuscle.Pectoral_Right);
+                else OWO.Send(sensation, OWOMuscle.Abdominal_Right);
+            }
+            if ((xzAngle > 90f) && (xzAngle < 180f))
+            {
+                if (yShift >= 0f) OWO.Send(sensation, OWOMuscle.Dorsal_Right);
+                else OWO.Send(sensation, OWOMuscle.Lumbar_Right);
+            }
+            if ((xzAngle > 180f) && (xzAngle < 270f))
+            {
+                if (yShift >= 0f) OWO.Send(sensation, OWOMuscle.Dorsal_Left);
+                else OWO.Send(sensation, OWOMuscle.Lumbar_Left);
+            }
+            if ((xzAngle > 270f))
+            {
+                if (yShift >= 0f) OWO.Send(sensation, OWOMuscle.Pectoral_Right);
+                else OWO.Send(sensation, OWOMuscle.Abdominal_Right);
+            }
         }
 
-        public void Recoil(string weaponName, bool isRightHand, bool isTwoHanded, float intensity = 1.0f)
+        public void Recoil(bool isRightHand, bool isTwoHanded)
         {
-            // weaponName is a parameter that will go into the vest feedback pattern name
-            // isRightHand is just which side the feedback is on
-            // intensity should usually be between 0 and 1
-
-            float duration = 1.0f;
-            var scaleOption = new bHaptics.ScaleOption(intensity, duration);
-            // the function needs some rotation if you want to give the scale option as well
-            var rotationFront = new bHaptics.RotationOption(0f, 0f);
-            // make postfix according to parameter
-            string postfix = "_L";
-            string otherPostfix = "_R";
-            if (isRightHand) { postfix = "_R"; otherPostfix = "_L"; }
-
-            // stitch together pattern names for Arm and Hand recoil
-            string keyHand = "RecoilHands" + postfix;
-            string keyArm = "RecoilArms" + postfix;
-            string keyOffHand = "RecoilHands" + otherPostfix;
-            string keyOffArm = "RecoilArms" + otherPostfix;
-            // vest pattern name contains the weapon name. This way, you can quickly switch
-            // between swords, pistols, shotguns, ... by just changing the shoulder feedback
-            // and scaling via the intensity for arms and hands
-            string keyVest = "Recoil" + weaponName + "Vest" + postfix;
-            bHaptics.SubmitRegistered(keyHand, keyHand, scaleOption, rotationFront);
-            bHaptics.SubmitRegistered(keyArm, keyArm, scaleOption, rotationFront);
+            LOG("Recoil!");
             if (isTwoHanded)
             {
-                bHaptics.SubmitRegistered(keyOffHand, keyOffHand, scaleOption, rotationFront);
-                bHaptics.SubmitRegistered(keyOffArm, keyOffArm, scaleOption, rotationFront);
+                OWO.Send(OWOSensation.GunRecoil, OWOMuscle.Arm_Right, OWOMuscle.Arm_Left);
+                return;
             }
-            bHaptics.SubmitRegistered(keyVest, keyVest, scaleOption, rotationFront);
+            if (isRightHand) OWO.Send(OWOSensation.GunRecoil, OWOMuscle.Arm_Right);
+            else OWO.Send(OWOSensation.GunRecoil, OWOMuscle.Arm_Left);
         }
 
-
-        public void HeadShot(String key, float hitAngle)
+        public void PlayHeal()
         {
-            // I made 4 patterns in the Tactal for fron/back/left/right headshots
-            if (bHaptics.IsDeviceConnected(bHaptics.DeviceType.Tactal))
-            {
-                if ((hitAngle < 45f) | (hitAngle > 315f)) { PlaybackHaptics("Headshot_F"); }
-                if ((hitAngle > 45f) && (hitAngle < 135f)) { PlaybackHaptics("Headshot_L"); }
-                if ((hitAngle > 135f) && (hitAngle < 225f)) { PlaybackHaptics("Headshot_B"); }
-                if ((hitAngle > 225f) && (hitAngle < 315f)) { PlaybackHaptics("Headshot_R"); }
-            }
-            // If there is no Tactal, just forward to the vest  with angle and at the very top (0.5)
-            else { PlayBackHit(key, hitAngle, 0.5f); }
+            OWO.Send(HealingBody);
+        }
+
+        public void PlayExplosion()
+        {
+            OWO.Send(ExplosionBelly);
         }
 
         public void StartHeartBeat()
@@ -168,25 +145,6 @@ namespace MyBhapticsTactsuit
         public void StopHeartBeat()
         {
             HeartBeat_mrse.Reset();
-        }
-
-        public bool IsPlaying(String effect)
-        {
-            return bHaptics.IsPlaying(effect);
-        }
-
-        public void StopHapticFeedback(String effect)
-        {
-            bHaptics.TurnOff(effect);
-        }
-
-        public void StopAllHapticFeedback()
-        {
-            StopThreads();
-            foreach (String key in FeedbackMap.Keys)
-            {
-                bHaptics.TurnOff(key);
-            }
         }
 
         public void StopThreads()
