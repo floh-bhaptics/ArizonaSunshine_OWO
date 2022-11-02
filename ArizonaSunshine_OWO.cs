@@ -152,17 +152,6 @@ namespace ArizonaSunshine_bhaptics
             }
         }
 
-        [HarmonyPatch(typeof(Player), "Kill", new Type[] {  })]
-        public class bhaptics_PlayerKilled
-        {
-            [HarmonyPostfix]
-            public static void Postfix(Player __instance)
-            {
-                if (!__instance.IsLocalPlayer) return;
-                tactsuitVr.StopThreads();
-            }
-        }
-
         [HarmonyPatch(typeof(Player), "Update", new Type[] { })]
         public class bhaptics_PlayerUpdate
         {
@@ -170,8 +159,7 @@ namespace ArizonaSunshine_bhaptics
             public static void Postfix(Player __instance)
             {
                 if (!__instance.IsLocalPlayer) return;
-                if (__instance.Health <= 30.0f) tactsuitVr.StartHeartBeat();
-                else tactsuitVr.StopHeartBeat();
+                if (__instance.Health <= 30.0f) tactsuitVr.PlayBackFeedback("ThreeHeartBeats");
             }
         }
     }
