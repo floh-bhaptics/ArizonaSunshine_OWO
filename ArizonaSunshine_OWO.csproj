@@ -65,7 +65,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArizonaSunshine_OWO.cs" />
-    <Compile Include="MyOWOSensations.cs" />
     <Compile Include="MyOWOVest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

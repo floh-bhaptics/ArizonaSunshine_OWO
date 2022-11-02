@@ -16,9 +16,9 @@ namespace ArizonaSunshine_bhaptics
         public static TactsuitVR tactsuitVr;
         public static bool footStepRight = true;
 
-        public override void OnApplicationStart()
+        public override void OnInitializeMelon()
         {
-            base.OnApplicationStart();
+            //base.OnApplicationStart();
             tactsuitVr = new TactsuitVR();
         }
 
@@ -118,7 +118,7 @@ namespace ArizonaSunshine_bhaptics
             public static void Postfix(Player __instance)
             {
                 if (!__instance.IsLocalPlayer) return;
-                tactsuitVr.PlayHeal();
+                tactsuitVr.PlayBackFeedback("Healing");
             }
         }
 
@@ -128,7 +128,7 @@ namespace ArizonaSunshine_bhaptics
             [HarmonyPostfix]
             public static void Postfix()
             {
-                tactsuitVr.PlayExplosion();
+                tactsuitVr.PlayBackFeedback("Explosion");
             }
         }
 
@@ -138,7 +138,7 @@ namespace ArizonaSunshine_bhaptics
             [HarmonyPostfix]
             public static void Postfix()
             {
-                tactsuitVr.PlayExplosion();
+                tactsuitVr.PlayBackFeedback("Explosion");
             }
         }
 
@@ -148,7 +148,7 @@ namespace ArizonaSunshine_bhaptics
             [HarmonyPostfix]
             public static void Postfix()
             {
-                tactsuitVr.PlayExplosion();
+                tactsuitVr.PlayBackFeedback("Explosion");
             }
         }
 
