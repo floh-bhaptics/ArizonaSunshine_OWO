@@ -125,13 +125,11 @@ namespace MyBhapticsTactsuit
             else OWO.Send(FeedbackMap["Hit_Back"]);
         }
 
-            public void Recoil(bool isRightHand, bool isTwoHanded)
+        public void Recoil(bool isRightHand, bool isTwoHanded)
         {
             if (isTwoHanded)
             {
-                PlayBackFeedback("Recoil_L");
-                PlayBackFeedback("Recoil_R");
-                //OWO.Send(Sensation.GunRecoil, Muscle.Arm_R.WithIntensity(70), Muscle.Arm_L.WithIntensity(70));
+                PlayBackFeedback("Recoil_both");
                 return;
             }
             if (isRightHand) PlayBackFeedback("Recoil_R");
