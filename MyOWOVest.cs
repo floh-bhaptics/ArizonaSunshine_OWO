@@ -24,6 +24,7 @@ namespace MyBhapticsTactsuit
 
         public TactsuitVR()
         {
+            RegisterAllTactFiles();
             InitializeOWO();
         }
 
