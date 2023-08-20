@@ -32,7 +32,16 @@ namespace MyBhapticsTactsuit
         {
             LOG("Initializing suit");
 
-            await OWO.AutoConnectAsync();
+            string IPFile = Directory.GetCurrentDirectory() + "\\Mods\\OWO\\IP.txt";
+            if(File.Exists(IPFile))
+            {
+                string IP=File.ReadAllText(IPFile);
+                await OWO.Connect(IP);
+            }
+            else
+            {
+                await OWO.AutoConnectAsync();
+            }
 
             if (OWO.IsConnected)
             {
