@@ -36,7 +36,8 @@ namespace MyBhapticsTactsuit
             if(File.Exists(IPFile))
             {
                 string IP=File.ReadAllText(IPFile);
-                await OWO.Connect(IP);
+                OWO.Connect(IP);
+                Thread.Sleep(100);
             }
             else
             {
