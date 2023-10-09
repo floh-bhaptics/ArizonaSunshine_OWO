@@ -105,6 +105,7 @@ namespace ArizonaSunshine_bhaptics
             public static void Postfix(Gun __instance, bool __result)
             {
                 if (!__result) return;
+                if (!__instance.IsControlledLocally) return;
                 bool twoHanded = (__instance.IsTwoHanded && __instance.IsTwoHandedOffHandAttached);
                 bool isRight = (__instance.EquipmentSlot.SlotID == E_EQUIPMENT_SLOT_ID.RIGHT_HAND);
                 tactsuitVr.Recoil(isRight, twoHanded);

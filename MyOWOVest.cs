@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading;
+using Harmony;
 using MelonLoader;
-using OWOHaptic;
+using OWOGame;
 //using MyOWOSensations;
 
 namespace MyBhapticsTactsuit
@@ -20,7 +22,7 @@ namespace MyBhapticsTactsuit
         public bool suitDisabled = true;
         public bool systemInitialized = false;
         // Event to start and stop the heartbeat thread
-        public Dictionary<String, ISensation> FeedbackMap = new Dictionary<String, ISensation>();
+        public Dictionary<String, Sensation> FeedbackMap = new Dictionary<String, Sensation>();
 
         public TactsuitVR()
         {
@@ -32,14 +34,37 @@ namespace MyBhapticsTactsuit
         {
             LOG("Initializing suit");
 
-            await OWO.AutoConnectAsync();
+            // New auth.
+            var gameAuth = GameAuth.Create(AllBakedSensations()).WithId("40872061");
 
-            if (OWO.IsConnected)
+            OWO.Configure(gameAuth);
+            string myIP = getIpFromFile("OWO_Manual_IP.txt");
+            if (myIP == "") await OWO.AutoConnect();
+            else
+            {
+                LOG("Found manual IP address: " + myIP);
+                await OWO.Connect(myIP);
+            }
+
+            if (OWO.ConnectionState == ConnectionState.Connected)
             {
                 suitDisabled = false;
                 LOG("OWO suit connected.");
             }
             if (suitDisabled) LOG("Owo is not enabled?!?!");
+        }
+
+        public string getIpFromFile(string filename)
+        {
+            string ip = "";
+            string filePath = Directory.GetCurrentDirectory() + "\\Mods\\" + filename;
+            if (File.Exists(filePath))
+            {
+                string fileBuffer = File.ReadAllText(filePath);
+                IPAddress address;
+                if (IPAddress.TryParse(fileBuffer, out address)) ip = fileBuffer;
+            }
+            return ip;
         }
 
         ~TactsuitVR()
@@ -48,6 +73,25 @@ namespace MyBhapticsTactsuit
             DisconnectOwo();
         }
 
+        private BakedSensation[] AllBakedSensations()
+        {
+            var result = new List<BakedSensation>();
+
+            foreach (var sensation in FeedbackMap.Values)
+            {
+                if (sensation is BakedSensation baked)
+                {
+                    LOG("Registered baked sensation: " + baked.name);
+                    result.Add(baked);
+                }
+                else
+                {
+                    LOG("Sensation not baked? " + sensation);
+                    continue;
+                }
+            }
+            return result.ToArray();
+        }
 
         public void DisconnectOwo()
         {
@@ -57,9 +101,7 @@ namespace MyBhapticsTactsuit
 
         public void LOG(string logStr)
         {
-#pragma warning disable CS0618 // remove warning that the logger is deprecated
             MelonLogger.Msg(logStr);
-#pragma warning restore CS0618
         }
 
         void RegisterAllTactFiles()
@@ -79,9 +121,7 @@ namespace MyBhapticsTactsuit
                 string tactFileStr = File.ReadAllText(fullName);
                 try
                 {
-                    ISensation test = Sensation.FromCode(tactFileStr);
-                    //bHaptics.RegisterFeedback(prefix, tactFileStr);
-                    LOG("Pattern registered: " + prefix);
+                    Sensation test = Sensation.Parse(tactFileStr);
                     FeedbackMap.Add(prefix, test);
                 }
                 catch (Exception e) { LOG(e.ToString()); }
@@ -122,9 +162,9 @@ namespace MyBhapticsTactsuit
             */
             if ((xzAngle < 180f))
             {
-                OWO.Send(FeedbackMap["Hit_Front"]);
+                PlayBackFeedback("Hit_Front");
             }
-            else OWO.Send(FeedbackMap["Hit_Back"]);
+            else PlayBackFeedback("Hit_Back");
         }
 
         public void Recoil(bool isRightHand, bool isTwoHanded)

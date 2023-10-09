@@ -23,7 +23,7 @@ using MelonLoader;
 // Die folgende GUID bestimmt die ID der Typbibliothek, wenn dieses Projekt für COM verfügbar gemacht wird
 [assembly: Guid("79fcd265-4e09-44dc-8b89-21b77865803b")]
 
-[assembly: MelonInfo(typeof(ArizonaSunshine_bhaptics.ArizonaSunshine_OWO), "ArizonaSunshine_OWO", "2.0.0", "Florian Fahrenberger")]
+[assembly: MelonInfo(typeof(ArizonaSunshine_bhaptics.ArizonaSunshine_OWO), "ArizonaSunshine_OWO", "3.0.0", "Florian Fahrenberger")]
 [assembly: MelonGame("Vertigo Games", "ArizonaSunshine")]
 
 // Versionsinformationen für eine Assembly bestehen aus den folgenden vier Werten:
