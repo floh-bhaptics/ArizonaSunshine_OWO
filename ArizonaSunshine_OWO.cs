@@ -15,6 +15,7 @@ namespace ArizonaSunshine_bhaptics
     {
         public static TactsuitVR tactsuitVr;
         public static bool footStepRight = true;
+        public static bool healthLow = false;
 
         public override void OnInitializeMelon()
         {
@@ -120,6 +121,7 @@ namespace ArizonaSunshine_bhaptics
             {
                 if (!__instance.IsLocalPlayer) return;
                 tactsuitVr.PlayBackFeedback("Healing");
+                healthLow = false;
             }
         }
 
@@ -160,7 +162,12 @@ namespace ArizonaSunshine_bhaptics
             public static void Postfix(Player __instance)
             {
                 if (!__instance.IsLocalPlayer) return;
-                if (__instance.Health <= 30.0f) tactsuitVr.PlayBackFeedback("ThreeHeartBeats");
+                if (healthLow) return;
+                if (__instance.Health <= 30.0f)
+                {
+                    tactsuitVr.PlayBackFeedback("ThreeHeartBeats");
+                    healthLow = true;
+                }
             }
         }
     }
