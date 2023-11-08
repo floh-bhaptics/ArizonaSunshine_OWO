@@ -5,7 +5,7 @@ This is a mod for the VR game "Arizona Sunshine" that connects to your OWO skin 
 ## Installation
 
 * Download the [MelonLoader installer](https://melonwiki.xyz/#/?id=automated-installation) and install MelonLoader onto your game.
-* Download the latest release of [this mod](https://github.com/floh-bhaptics/ArizonaSunshine_OWO/releases/latest) and unzip it into your game directory.
+* Download the latest release of [this mod](https://github.com/floh-bhaptics/ArizonaSunshine_OWO/releases/latest) and unzip it into the "Mods" folder in your game directory.
 * That's it. Start your OWO app in the same network, connect to the OWO skin, and start up the game.
 
 ## Currently supported effects
